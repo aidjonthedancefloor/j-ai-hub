@@ -1,4 +1,4 @@
-package com.aidj;
+package com.aidj.aihub;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
