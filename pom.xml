@@ -7,9 +7,9 @@
   <artifactId>ai-hub</artifactId>
   <version>1.0</version>
 
+  <packaging>war</packaging>
+
   <name>ai-hub</name>
-  <!-- FIXME change it to the project's website -->
-  <url>http://www.example.com</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -115,5 +115,25 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>io.openliberty.tools</groupId>
+        <artifactId>liberty-maven-plugin</artifactId>
+        <version>3.10</version>
+        <configuration>
+          <serverName>aiHubServer</serverName>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.3.2</version> <!-- or latest stable -->
+      </plugin>
+    </plugins>
+
+    <finalName>ai-hub</finalName>
+
   </build>
 </project>
