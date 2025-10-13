@@ -13,6 +13,7 @@ public class AiApi extends AiHubApplication {
         Set<Class<?>> classes = new HashSet<>();
 
         classes.add(com.aidj.aihub.rest.resources.HelloResource.class);
+        classes.add(com.aidj.aihub.rest.resources.V1Resource.class);
 
         return classes;
     }
