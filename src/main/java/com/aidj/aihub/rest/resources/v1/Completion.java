@@ -54,11 +54,11 @@ public class Completion {
     @POST
     @Consumes("application/json")
     @Produces("application/x-ndjson") // newline delimited json
-    public Response complete(CompletionInput input) {
+    public StreamingOutput complete(CompletionInput input) {
         TokenStream responseStream = AdHoc.adHocComplete(input.getSystemPrompts(), input.getUserPrompts());
 
-        StreamingOutput streamingOutput = output -> {
-            PrintWriter writer = new PrintWriter(output, true);
+        StreamingOutput streamingOutput = outputStream -> {
+            PrintWriter writer = new PrintWriter(outputStream, true);
             Semaphore sem = new Semaphore(0);
 
             Runnable cleanup = () -> {
@@ -68,13 +68,14 @@ public class Completion {
 
             responseStream
                 .onPartialResponse(token -> {
-                    writer.println("{\"response\":\"" + token.replace("\n", "\\n").replace("\"", "\\\"") + "\"}");
+                    writer.println("{\"chunk\":\"" + token.replace("\n", "\\n").replace("\"", "\\\"") + "\"}");
                 })
                 .onCompleteResponse(x -> {
                     cleanup.run();
                 })
                 .onError(err -> {
-                    writer.println("{\"error\":\"" + (err == null ? "unknown" : err.getMessage()) + "\"}");
+                    // TODO log `err`
+                    writer.println("{\"error\":\"" + "unknown" + "\"}");
                     cleanup.run();
                 })
                 .start();
@@ -86,8 +87,6 @@ public class Completion {
             }
         };
 
-
-        return Response.ok(streamingOutput).header("Content-Type", "application/x-ndjson").build();
-        // return streamingOutput;
+        return streamingOutput;
     }
 }
