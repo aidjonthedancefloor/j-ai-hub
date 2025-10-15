@@ -41,35 +41,57 @@
       <scope>test</scope>
     </dependency>
 
-      <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-open-ai -->
-      <dependency>
+    <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-open-ai -->
+    <dependency>
+      <groupId>dev.langchain4j</groupId>
+      <artifactId>langchain4j-open-ai</artifactId>
+      <version>1.7.1</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-core -->
+    <dependency>
         <groupId>dev.langchain4j</groupId>
-        <artifactId>langchain4j-open-ai</artifactId>
+        <artifactId>langchain4j-core</artifactId>
         <version>1.7.1</version>
-      </dependency>
+    </dependency>
 
-      <dependency>
-        <groupId>io.github.cdimascio</groupId>
-        <artifactId>dotenv-java</artifactId>
-        <version>3.0.0</version>
-      </dependency>
 
-      <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider -->
-      <dependency>
-          <groupId>com.fasterxml.jackson.jaxrs</groupId>
-          <artifactId>jackson-jaxrs-json-provider</artifactId>
-          <version>2.20.0</version>
-      </dependency>
+    <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j -->
+    <dependency>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j</artifactId>
+        <version>1.7.1</version>
+    </dependency>
 
-      <!-- https://mvnrepository.com/artifact/javax/javaee-api -->
-      <dependency>
-          <groupId>javax</groupId>
-          <artifactId>javaee-api</artifactId>
-          <version>8.0.1</version>
-          <scope>provided</scope>
-      </dependency>
+    <dependency>
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>dotenv-java</artifactId>
+      <version>3.0.0</version>
+    </dependency>
 
-    <!-- Lombok for concise DTOs -->
+    <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId>
+        <version>2.20.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/javax/javaee-api -->
+    <dependency>
+        <groupId>javax</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>8.0.1</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
+    <!-- stop the annoying messages on stdout -->
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>2.0.17</version>
+    </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>

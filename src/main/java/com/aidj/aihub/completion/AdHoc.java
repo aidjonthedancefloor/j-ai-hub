@@ -10,17 +10,28 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.TokenStream;
+
 
 public class AdHoc {
-    public static String adHocComplete(List<String> systemPrompts, List<String> userPrompts) {
-        ChatModel model = LlmFactory.createChatModel();
+
+    interface Assistant {
+
+        TokenStream chat(List<ChatMessage> messages);
+    }
+
+    public static TokenStream adHocComplete(List<String> systemPrompts, List<String> userPrompts) {
+        StreamingChatModel model = LlmFactory.createStreamingChatModel();
         List<ChatMessage> chatMessages = Stream.concat(
             systemPrompts.stream().map(p -> new SystemMessage(p)),
             userPrompts.stream().map(p -> new UserMessage(p))
         ).collect(Collectors.toList());
 
-        ChatResponse response = model.chat(chatMessages);
-        return response.aiMessage().text();
+        Assistant assistant = AiServices.create(Assistant.class, model);
+
+        return assistant.chat(chatMessages);
     }
 }
