@@ -9,6 +9,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Produces;
@@ -68,14 +70,24 @@ public class Completion {
 
             responseStream
                 .onPartialResponse(token -> {
-                    writer.println("{\"chunk\":\"" + token.replace("\n", "\\n").replace("\"", "\\\"") + "\"}");
+                    writer.println(
+                        Json.createObjectBuilder()
+                            .add("chunk", token)
+                            .build()
+                            .toString()
+                    );
                 })
                 .onCompleteResponse(x -> {
                     cleanup.run();
                 })
                 .onError(err -> {
                     // TODO log `err`
-                    writer.println("{\"error\":\"" + "unknown" + "\"}");
+                    writer.println(
+                        Json.createObjectBuilder()
+                            .add("error", "unknown")
+                            .build()
+                            .toString()
+                    );
                     cleanup.run();
                 })
                 .start();
