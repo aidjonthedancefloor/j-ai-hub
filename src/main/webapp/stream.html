@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Hub — Stream Viewer</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; padding: 20px; background:#f7f7f8; }
+    main { max-width: 900px; margin: 0 auto; }
+    textarea { width:100%; min-height:80px; font-family: monospace; }
+    pre { background: #111; color: #0f0; padding: 12px; border-radius: 6px; overflow:auto; max-height:60vh; word-wrap: break-word; }
+    .row { display:flex; gap:12px; }
+    label { font-weight:600; display:block; margin-bottom:6px; }
+    button { padding:8px 12px; }
+    .chip { background:#fff; padding:6px 10px; border-radius:12px; border:1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>AI Hub — Stream Viewer</h1>
+
+    <p> this is temporary, for testing, and should be deleted before going to prod </p>
+
+    <div>
+      <label for="system">System prompts (one per line)</label>
+      <textarea id="system" placeholder="You are a helpful assistant."></textarea>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label for="user">User prompts (one per line)</label>
+      <textarea id="user" placeholder="Hello! Tell me a short story."></textarea>
+    </div>
+
+    <div style="margin-top:12px;" class="row">
+      <button id="start">Start stream</button>
+      <button id="stop" disabled>Stop</button>
+      <button id="clear">Clear</button>
+      <div class="chip" id="status">idle</div>
+    </div>
+
+    <h2 style="margin-top:18px;">Stream output</h2>
+    <pre id="out" aria-live="polite"></pre>
+  </main>
+
+  <script>
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+    const clearBtn = document.getElementById('clear');
+    const out = document.getElementById('out');
+    const status = document.getElementById('status');
+
+    let controller = null; // AbortController for fetch
+
+    function appendLine(line){
+      out.textContent += line + '\n';
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function append(s){
+      out.textContent += s;
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function safeParseJson(s){
+      try { return JSON.parse(s); } catch(e){ return null; }
+    }
+
+    async function startStream(){
+      startBtn.disabled = true; stopBtn.disabled = false; status.textContent = 'connecting';
+
+      const sys = document.getElementById('system').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const usr = document.getElementById('user').value.split('\n').map(s => s.trim()).filter(Boolean);
+
+      const payload = { systemPrompts: sys, userPrompts: usr };
+
+      controller = new AbortController();
+
+      try {
+        const resp = await fetch('http://localhost:9080/ai-hub/ai-api/v1/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/x-ndjson' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+
+        if (!resp.ok) {
+          appendLine('HTTP ' + resp.status + ' ' + resp.statusText);
+          status.textContent = 'error';
+          return;
+        }
+
+        status.textContent = 'streaming';
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const parts = buf.split('\n');
+          buf = parts.pop();
+          for (const p of parts) {
+            if (!p.trim()) continue;
+            // NDJSON: each line is a JSON object
+            const obj = safeParseJson(p);
+            if (obj) {
+              // pretty display: if it has response or partial, show that
+              if (obj.chunk) append(obj.chunk);
+              else appendLine(JSON.stringify(obj));
+            } else {
+              appendLine(p);
+            }
+          }
+        }
+
+        // flush remaining buffer
+        if (buf && buf.trim()){
+          const obj = safeParseJson(buf);
+          appendLine(obj ? (obj.response || JSON.stringify(obj)) : buf);
+        }
+
+        status.textContent = 'finished';
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          appendLine('[aborted]');
+          status.textContent = 'aborted';
+        } else {
+          appendLine('[error] ' + err);
+          status.textContent = 'error';
+        }
+      } finally {
+        startBtn.disabled = false; stopBtn.disabled = true; controller = null;
+      }
+    }
+
+    startBtn.addEventListener('click', startStream);
+    stopBtn.addEventListener('click', () => {
+      if (controller) controller.abort();
+    });
+    clearBtn.addEventListener('click', () => { out.textContent = ''; status.textContent='idle'; });
+  </script>
+</body>
+</html>
