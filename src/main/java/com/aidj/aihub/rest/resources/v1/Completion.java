@@ -34,9 +34,9 @@ import lombok.NoArgsConstructor;
     }
 
     output:
-    {
-        response: <string>
-    }
+    (newline delimited json:)
+    | { "chunk": <string> }
+    | { "error": <string> }
 */
 
 public class Completion {
@@ -45,12 +45,6 @@ public class Completion {
     public static class CompletionInput {
         private List<String> systemPrompts;
         private List<String> userPrompts;
-    }
-
-    @Data
-    @Builder
-    public static class CompletionOutput {
-        private String response;
     }
 
     @POST
