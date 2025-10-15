@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -57,51 +59,30 @@ public class Completion {
 
         StreamingOutput streamingOutput = output -> {
             PrintWriter writer = new PrintWriter(output, true);
+            Semaphore sem = new Semaphore(0);
 
-            // queue for tokens produced by worker threads
-            final BlockingQueue<String> queue = new LinkedBlockingQueue<>(1024);
-            final CountDownLatch done = new CountDownLatch(1);
+            Runnable cleanup = () -> {
+                writer.close();
+                sem.release();
+            };
 
-            // register callbacks: producers only enqueue and signal completion
             responseStream
                 .onPartialResponse(token -> {
-                    boolean offered = queue.offer(token);
-                    if (!offered) {
-                        // queue full; drop token or log
-                        System.err.println("Dropping token because queue is full");
-                    }
+                    writer.println("{\"response\":\"" + token.replace("\n", "\\n").replace("\"", "\\\"") + "\"}");
                 })
                 .onCompleteResponse(x -> {
-                    done.countDown();
+                    cleanup.run();
                 })
                 .onError(err -> {
-                    try {
-                        queue.offer("{\"error\":\"" + (err == null ? "unknown" : err.getMessage()) + "\"}");
-                    } catch (Exception e) {
-                        // ignore
-                    } finally {
-                        done.countDown();
-                    }
+                    writer.println("{\"error\":\"" + (err == null ? "unknown" : err.getMessage()) + "\"}");
+                    cleanup.run();
                 })
                 .start();
 
-            // consumer: request thread drains the queue and performs all IO against the servlet response
             try {
-                while (true) {
-                    String s = queue.poll(250, TimeUnit.MILLISECONDS);
-                    if (s != null) {
-                        writer.println(s);
-                        writer.flush();
-                    } else {
-                        if (done.getCount() == 0 && queue.isEmpty()) break;
-                    }
-                }
+                sem.acquire();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } finally {
-                try {
-                    writer.close();
-                } catch (Exception ignored) {}
             }
         };
 
