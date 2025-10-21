@@ -76,7 +76,7 @@
       controller = new AbortController();
 
       try {
-        const resp = await fetch('http://localhost:9080/ai-hub/ai-api/v1/complete', {
+        const resp = await fetch('http://localhost:9080/ai-hub/ai-api/v1/mcp-complete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/x-ndjson' },
           body: JSON.stringify(payload),
