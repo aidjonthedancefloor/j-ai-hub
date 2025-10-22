@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.aidj.aihub.completion.AdHoc;
+import com.aidj.aihub.rest.StreamingOutputUtil;
 
 import dev.langchain4j.service.TokenStream;
 import lombok.Builder;
@@ -52,47 +53,6 @@ public class Completion {
     @Produces("application/x-ndjson") // newline delimited json
     public StreamingOutput complete(CompletionInput input) {
         TokenStream responseStream = AdHoc.adHocComplete(input.getSystemPrompts(), input.getUserPrompts());
-
-        StreamingOutput streamingOutput = outputStream -> {
-            PrintWriter writer = new PrintWriter(outputStream, true);
-            Semaphore sem = new Semaphore(0);
-
-            Runnable cleanup = () -> {
-                writer.close();
-                sem.release();
-            };
-
-            responseStream
-                .onPartialResponse(token -> {
-                    writer.println(
-                        Json.createObjectBuilder()
-                            .add("chunk", token)
-                            .build()
-                            .toString()
-                    );
-                })
-                .onCompleteResponse(x -> {
-                    cleanup.run();
-                })
-                .onError(err -> {
-                    // TODO log `err`
-                    writer.println(
-                        Json.createObjectBuilder()
-                            .add("error", "unknown")
-                            .build()
-                            .toString()
-                    );
-                    cleanup.run();
-                })
-                .start();
-
-            try {
-                sem.acquire();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        };
-
-        return streamingOutput;
+        return StreamingOutputUtil.streamingOutputFromTokenStream(responseStream);
     }
 }

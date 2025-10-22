@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.aidj.aihub.completion.AdHoc;
+import com.aidj.aihub.rest.StreamingOutputUtil;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -73,50 +74,9 @@ public class Chat {
     @Consumes("application/json")
     @Produces("application/x-ndjson") // newline delimited json
     public StreamingOutput chat(ChatInput input) {
-        // TODO validation error instead
-        List<ChatMessage> chatMessages = input.toChatMessages().orElseThrow(() -> new IllegalArgumentException("Invalid prompt roles"));
+        List<ChatMessage> chatMessages = input.toChatMessages().orElseThrow(() -> new IllegalArgumentException("Invalid prompt roles")); // TODO validation error instead
+
         TokenStream responseStream = AdHoc.adHocChat(chatMessages);
-
-        StreamingOutput streamingOutput = outputStream -> {
-            PrintWriter writer = new PrintWriter(outputStream, true);
-            Semaphore sem = new Semaphore(0);
-
-            Runnable cleanup = () -> {
-                writer.close();
-                sem.release();
-            };
-
-            responseStream
-                .onPartialResponse(token -> {
-                    writer.println(
-                        Json.createObjectBuilder()
-                            .add("chunk", token)
-                            .build()
-                            .toString()
-                    );
-                })
-                .onCompleteResponse(x -> {
-                    cleanup.run();
-                })
-                .onError(err -> {
-                    // TODO log `err`
-                    writer.println(
-                        Json.createObjectBuilder()
-                            .add("error", "unknown")
-                            .build()
-                            .toString()
-                    );
-                    cleanup.run();
-                })
-                .start();
-
-            try {
-                sem.acquire();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        };
-
-        return streamingOutput;
+        return StreamingOutputUtil.streamingOutputFromTokenStream(responseStream);
     }
 }

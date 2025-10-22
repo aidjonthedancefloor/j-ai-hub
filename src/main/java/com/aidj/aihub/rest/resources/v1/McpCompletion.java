@@ -19,6 +19,7 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.aidj.aihub.completion.AdHoc;
 import com.aidj.aihub.completion.Mcp;
+import com.aidj.aihub.rest.StreamingOutputUtil;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.TokenStream;
@@ -57,53 +58,16 @@ public class McpCompletion {
 
         TokenStream responseStream = Mcp.mcpComplete(input.getSystemPrompts(), input.getUserPrompts(), clients);
 
-        StreamingOutput streamingOutput = outputStream -> {
-            PrintWriter writer = new PrintWriter(outputStream, true);
-            Semaphore sem = new Semaphore(0);
-
-            Runnable cleanup = () -> {
-                writer.close();
-                sem.release();
-                clients.forEach(client -> {
-                    try {
-                        client.close();
-                    } catch (Exception e) {
-                        // TODO log error
-                    }
-                });
-            };
-
-            responseStream
-                .onPartialResponse(token -> {
-                    writer.println(
-                        Json.createObjectBuilder()
-                            .add("chunk", token)
-                            .build()
-                            .toString()
-                    );
-                })
-                .onCompleteResponse(x -> {
-                    cleanup.run();
-                })
-                .onError(err -> {
-                    // TODO log `err`
-                    writer.println(
-                        Json.createObjectBuilder()
-                            .add("error", "unknown")
-                            .build()
-                            .toString()
-                    );
-                    cleanup.run();
-                })
-                .start();
-
-            try {
-                sem.acquire();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        Runnable cleanup = () -> {
+            clients.forEach(client -> {
+                try {
+                    client.close();
+                } catch (Exception e) {
+                    // TODO log error
+                }
+            });
         };
 
-        return streamingOutput;
+        return StreamingOutputUtil.streamingOutputFromTokenStreamWithCallback(responseStream, cleanup);
     }
 }
