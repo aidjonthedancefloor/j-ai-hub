@@ -2,6 +2,7 @@ package com.aidj.aihub.rest.resources;
 
 import javax.ws.rs.Path;
 
+import com.aidj.aihub.rest.resources.v1.Chat;
 import com.aidj.aihub.rest.resources.v1.Completion;
 import com.aidj.aihub.rest.resources.v1.McpCompletion;
 
@@ -11,6 +12,11 @@ public class V1Resource {
     @Path(value = "/complete")
     public Completion completion() {
         return new Completion();
+    }
+
+    @Path(value = "/chat")
+    public Chat chat() {
+        return new Chat();
     }
 
     @Path(value = "/mcp-complete")
