@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Hub — Chat</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; padding: 20px; background:#f7f7f8; }
+    main { max-width: 900px; margin: 0 auto; }
+    textarea, input[type=text] { width:100%; font-family: monospace; }
+    textarea { min-height:80px; }
+    pre { background: #111; color: #0f0; padding: 12px; border-radius: 6px; overflow:auto; max-height:60vh; white-space: pre-wrap; }
+    .row { display:flex; gap:12px; }
+    label { font-weight:600; display:block; margin-bottom:6px; }
+    button { padding:8px 12px; }
+    .chip { background:#fff; padding:6px 10px; border-radius:12px; border:1px solid #ddd; }
+    .msg { padding:8px 10px; border-radius:8px; margin:8px 0; }
+    .msg.system { background:#eef3ff; border:1px solid #cfe0ff; }
+    .msg.user { background:#e9ffe9; border:1px solid #cfeecf; }
+    .msg.assistant { background:#fff7e6; border:1px solid #ffe7b3; }
+    .role { font-weight:700; margin-right:8px; }
+    #conversation { margin-top:12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>AI Hub — Chat (streaming)</h1>
+
+    <p>Quick chat UI for testing. Sends the full conversation to the chat endpoint and streams assistant responses.</p>
+
+    <div>
+      <label for="system">System prompts (one per line)</label>
+      <textarea id="system" placeholder="You are a helpful assistant."></textarea>
+      <div style="margin-top:6px;">
+        <button id="apply-system">Apply system prompts</button>
+        <button id="clear-system">Clear system area</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label for="userInput">Your message</label>
+      <textarea id="userInput" placeholder="Say something to the assistant..."></textarea>
+    </div>
+
+    <div style="margin-top:12px;" class="row">
+      <button id="send">Send</button>
+      <button id="stop" disabled>Stop</button>
+      <button id="clear">Clear conversation</button>
+      <div class="chip" id="status">idle</div>
+    </div>
+
+    <h2 style="margin-top:18px;">Conversation</h2>
+    <div id="conversation" aria-live="polite"></div>
+  </main>
+
+  <script>
+    const sendBtn = document.getElementById('send');
+    const stopBtn = document.getElementById('stop');
+    const clearBtn = document.getElementById('clear');
+    const applySystemBtn = document.getElementById('apply-system');
+    const clearSystemBtn = document.getElementById('clear-system');
+    const status = document.getElementById('status');
+    const convEl = document.getElementById('conversation');
+
+    const systemArea = document.getElementById('system');
+    const userInput = document.getElementById('userInput');
+
+    let controller = null; // AbortController
+    let conversation = []; // { role: 'system'|'user'|'assistant', content: string }
+
+    function renderConversation(){
+      convEl.innerHTML = '';
+      for (const m of conversation) {
+        const div = document.createElement('div');
+        div.className = 'msg ' + m.role;
+        const role = document.createElement('span');
+        role.className = 'role';
+        role.textContent = m.role.toUpperCase();
+        const content = document.createElement('div');
+        content.textContent = m.content;
+        div.appendChild(role);
+        div.appendChild(content);
+        convEl.appendChild(div);
+      }
+    }
+
+    function appendAssistantPartial(text){
+      // show the assistant partial as the last assistant message in UI
+      const last = conversation[conversation.length - 1];
+      if (!last || last.role !== 'assistant') {
+        conversation.push({ role: 'assistant', content: text });
+      } else {
+        last.content = text;
+      }
+      renderConversation();
+      // scroll to bottom
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function safeParseJson(s){ try { return JSON.parse(s); } catch(e){ return null; } }
+
+    // When user clicks send: if there are system prompts and conversation is empty, prefix them once.
+    async function sendMessage(){
+      const userText = userInput.value.trim();
+      if (!userText) return;
+
+      // If first message, apply system prompts from textarea
+      if (conversation.length === 0) {
+        const sysLines = systemArea.value.split('\n').map(s => s.trim()).filter(Boolean);
+        for (const s of sysLines) conversation.push({ role: 'system', content: s });
+      }
+
+      // push the new user message
+      conversation.push({ role: 'user', content: userText });
+      userInput.value = '';
+      renderConversation();
+
+      // prepare payload
+      const payload = { prompts: conversation.map(m => ({ role: m.role, content: m.content })) };
+
+      controller = new AbortController();
+      sendBtn.disabled = true; stopBtn.disabled = false; status.textContent = 'connecting';
+
+      try {
+        const resp = await fetch('http://localhost:9080/ai-hub/ai-api/v1/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/x-ndjson' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+
+        if (!resp.ok) {
+          status.textContent = 'error';
+          appendSystemLine('HTTP ' + resp.status + ' ' + resp.statusText);
+          return;
+        }
+
+        status.textContent = 'streaming';
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        let assistantBuffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const parts = buf.split('\n');
+          buf = parts.pop();
+          for (const p of parts) {
+            if (!p.trim()) continue;
+            const obj = safeParseJson(p);
+            if (obj) {
+              if (obj.chunk) {
+                assistantBuffer += obj.chunk;
+                appendAssistantPartial(assistantBuffer);
+              } else if (obj.error) {
+                appendSystemLine('[error] ' + obj.error);
+              } else {
+                // unknown shape, show prettified
+                appendSystemLine(JSON.stringify(obj));
+              }
+            } else {
+              appendSystemLine(p);
+            }
+          }
+        }
+
+        // flush remaining buffer
+        if (buf && buf.trim()) {
+          const obj = safeParseJson(buf);
+          if (obj && obj.chunk) {
+            assistantBuffer += obj.chunk;
+            appendAssistantPartial(assistantBuffer);
+          } else if (obj && obj.error) {
+            appendSystemLine('[error] ' + obj.error);
+          } else {
+            appendSystemLine(buf);
+          }
+        }
+
+        // finalise assistant message content (already in conversation as last item)
+        status.textContent = 'finished';
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          appendSystemLine('[aborted]');
+          status.textContent = 'aborted';
+        } else {
+          appendSystemLine('[error] ' + err);
+          status.textContent = 'error';
+        }
+      } finally {
+        sendBtn.disabled = false; stopBtn.disabled = true; controller = null;
+      }
+    }
+
+    function appendSystemLine(line){
+      conversation.push({ role: 'system', content: line });
+      renderConversation();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    stopBtn.addEventListener('click', () => { if (controller) controller.abort(); });
+    clearBtn.addEventListener('click', () => { conversation = []; renderConversation(); status.textContent = 'idle'; });
+    applySystemBtn.addEventListener('click', () => {
+      const sysLines = systemArea.value.split('\n').map(s => s.trim()).filter(Boolean);
+      for (const s of sysLines) conversation.push({ role: 'system', content: s });
+      renderConversation();
+    });
+    clearSystemBtn.addEventListener('click', () => { systemArea.value = ''; });
+
+    // render initial (empty)
+    renderConversation();
+  </script>
+</body>
+</html>
