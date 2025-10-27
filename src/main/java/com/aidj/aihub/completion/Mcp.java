@@ -38,7 +38,7 @@ public class Mcp {
     public McpClient mkWeatherClient() {
 
         McpTransport transport = new XStreamableHttpMcpTransport.Builder()
-                .url("http://127.0.0.1:8000/mcp")
+                .url("http://localhost:9080/ai-hub/mcp")
                 .timeout(Duration.ofSeconds(60))
                 .logRequests(true)
                 .logResponses(true)

@@ -1,11 +1,9 @@
 <server description="AI Hub App Server">
 
     <featureManager>
-        <feature>jaxrs-2.1</feature>
-        <feature>servlet-4.0</feature>
-        <feature>cdi-2.0</feature>
-        <feature>mpConfig-2.0</feature>
-        <feature>mpOpenAPI-2.0</feature>
+        <feature>jaxrs</feature>
+        <feature>servlet-6.0</feature>
+        <feature>cdi</feature>
     </featureManager>
 
     <httpEndpoint id="defaultHttpEndpoint"
