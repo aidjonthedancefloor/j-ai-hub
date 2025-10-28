@@ -82,14 +82,6 @@
         <version>2.20.0</version>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/javax/javaee-api -->
-    <dependency>
-        <groupId>javax</groupId>
-        <artifactId>javaee-api</artifactId>
-        <version>8.0.1</version>
-        <scope>provided</scope>
-    </dependency>
-
     <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
     <!-- stop the annoying messages on stdout -->
     <dependency>

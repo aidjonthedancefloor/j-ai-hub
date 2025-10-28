@@ -1,6 +1,6 @@
 package com.aidj.aihub.rest.resources;
 
-import javax.ws.rs.Path;
+import jakarta.ws.rs.Path;
 
 import com.aidj.aihub.rest.resources.v1.Chat;
 import com.aidj.aihub.rest.resources.v1.Completion;

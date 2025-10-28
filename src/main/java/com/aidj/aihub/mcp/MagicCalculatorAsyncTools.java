@@ -8,7 +8,7 @@ import io.modelcontextprotocol.spec.McpSchema.CallToolResult.Builder;
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import reactor.core.publisher.Mono;
 

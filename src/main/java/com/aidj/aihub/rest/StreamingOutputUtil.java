@@ -3,8 +3,8 @@ package com.aidj.aihub.rest;
 import java.io.PrintWriter;
 import java.util.concurrent.Semaphore;
 
-import javax.json.Json;
-import javax.ws.rs.core.StreamingOutput;
+import jakarta.json.Json;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import dev.langchain4j.service.TokenStream;
 

@@ -1,9 +1,8 @@
 <server description="AI Hub App Server">
 
     <featureManager>
-        <feature>jaxrs</feature>
+        <feature>restfulWS-3.1</feature>
         <feature>servlet-6.0</feature>
-        <feature>cdi</feature>
     </featureManager>
 
     <httpEndpoint id="defaultHttpEndpoint"
