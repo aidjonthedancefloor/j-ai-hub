@@ -12,6 +12,7 @@ public abstract class AiHubApplication extends Application {
         Set<Class<?>> classes = new HashSet<>();
 
         classes.addAll(getApplicationClasses());
+        classes.add(tools.jackson.jakarta.rs.json.JacksonJsonProvider.class); // 415 Unsupported Media Type without this
 
         return classes;
     }
