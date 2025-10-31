@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-         version="4.0"
-         metadata-complete="true">
+         version="4.0">
 
   <listener>
     <listener-class>com.aidj.aihub.mcp.McpServerInitializer</listener-class>
