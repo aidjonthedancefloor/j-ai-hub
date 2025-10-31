@@ -108,12 +108,12 @@
     <dependency>
       <groupId>io.modelcontextprotocol.sdk</groupId>
       <artifactId>mcp</artifactId>
-      <version>69.0</version>
+      <version>100.15.0</version>
     </dependency>
     <dependency>
       <groupId>io.modelcontextprotocol.sdk</groupId>
       <artifactId>mcp-json</artifactId>
-      <version>69.0</version>
+      <version>100.15.0</version>
     </dependency>
 
   </dependencies>
