@@ -3,7 +3,7 @@ package com.aidj.aihub.rest.applications;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.ws.rs.core.Application;
+import javax.ws.rs.core.Application;
 
 public abstract class AiHubApplication extends Application {
 
@@ -12,7 +12,7 @@ public abstract class AiHubApplication extends Application {
         Set<Class<?>> classes = new HashSet<>();
 
         classes.addAll(getApplicationClasses());
-        classes.add(tools.jackson.jakarta.rs.json.JacksonJsonProvider.class); // 415 Unsupported Media Type without this
+        // classes.add(tools.jackson.jakarta.rs.json.JacksonJsonProvider.class); // 415 Unsupported Media Type without this
 
         return classes;
     }

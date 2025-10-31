@@ -3,7 +3,7 @@ package com.aidj.aihub.rest.applications;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.ws.rs.ApplicationPath;
+import javax.ws.rs.ApplicationPath;
 
 @ApplicationPath("/ai-api")
 public class AiApi extends AiHubApplication {

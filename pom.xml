@@ -75,11 +75,12 @@
       <version>3.0.0</version>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/tools.jackson.jakarta.rs/jackson-jakarta-rs-json-provider -->
+    <!-- https://mvnrepository.com/artifact/javax/javaee-api -->
     <dependency>
-        <groupId>tools.jackson.jakarta.rs</groupId>
-        <artifactId>jackson-jakarta-rs-json-provider</artifactId>
-        <version>3.0.1</version>
+        <groupId>javax</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>8.0.1</version>
+        <scope>provided</scope>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
@@ -97,22 +98,15 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- mcp server -->
-    <dependency>
-      <groupId>jakarta.platform</groupId>
-      <artifactId>jakarta.jakartaee-api</artifactId>
-      <version>10.0.0</version>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>io.modelcontextprotocol.sdk</groupId>
       <artifactId>mcp</artifactId>
-      <version>0.14.0</version>
+      <version>69.0</version>
     </dependency>
     <dependency>
       <groupId>io.modelcontextprotocol.sdk</groupId>
       <artifactId>mcp-json</artifactId>
-      <version>0.14.0</version>
+      <version>69.0</version>
     </dependency>
 
   </dependencies>

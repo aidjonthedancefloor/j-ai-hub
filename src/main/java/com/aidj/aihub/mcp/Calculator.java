@@ -3,7 +3,7 @@ package com.aidj.aihub.mcp;
 import java.util.logging.Logger;
 
 
-import jakarta.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class Calculator {

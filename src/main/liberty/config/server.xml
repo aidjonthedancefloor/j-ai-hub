@@ -1,17 +1,17 @@
 <server description="AI Hub App Server">
 
     <featureManager>
-        <feature>restfulWS-3.1</feature>
-        <feature>servlet-6.0</feature>
-        <feature>mpOpenAPI-4.1</feature>
+        <feature>jaxrs-2.1</feature>
+        <feature>servlet-4.0</feature>
+        <feature>cdi-2.0</feature>
+        <feature>mpConfig-2.0</feature>
+        <feature>mpOpenAPI-2.0</feature>
     </featureManager>
 
     <httpEndpoint id="defaultHttpEndpoint"
                   host="*"
                   httpPort="9080"
                   httpsPort="9443" />
-
-    <!-- <webApplication location="ai-hub.war" contextRoot="/"/> -->
 
     <mpOpenAPI docPath="ai-hub/ai-api/openapi" uiPath="ai-hub/ai-api/openapi/ui" />
 
